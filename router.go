@@ -23,7 +23,12 @@ type Router struct {
 	routes    map[string]*RouteConfig // command → config
 	globalSem chan struct{}            // global concurrency gate
 	routeSems map[string]chan struct{} // per-command concurrency gates
-	wg        sync.WaitGroup
+
+	// mu guards shuttingDown and must be held when calling wg.Add.
+	// This prevents wg.Add from racing with wg.Wait during shutdown.
+	mu           sync.Mutex
+	shuttingDown bool
+	wg           sync.WaitGroup
 }
 
 // NewRouter creates a Router from the given configuration.
@@ -101,8 +106,22 @@ func (r *Router) Dispatch(ctx context.Context, event SlashEvent) error {
 		}
 	}
 
-	// Launch the worker asynchronously.
+	// Guard wg.Add with the shutdown mutex so it cannot race with Wait.
+	// If shutdown has already begun, silently drop the request — the user
+	// will not receive a response, but the process is exiting anyway.
+	r.mu.Lock()
+	if r.shuttingDown {
+		r.mu.Unlock()
+		<-r.globalSem // release the slot we just acquired above
+		if sem, hasSem := r.routeSems[event.Command]; hasSem {
+			<-sem
+		}
+		slog.Info("router: shutdown in progress, dropping request", "command", event.Command)
+		return nil
+	}
 	r.wg.Add(1)
+	r.mu.Unlock()
+
 	go func() {
 		defer r.wg.Done()
 		defer func() { <-r.globalSem }()
@@ -115,8 +134,12 @@ func (r *Router) Dispatch(ctx context.Context, event SlashEvent) error {
 	return nil
 }
 
-// Wait blocks until all running workers have exited.
-// Call this during graceful shutdown after the Socket Mode connection closes.
+// Wait signals that no new workers should be accepted, then blocks until all
+// running workers have exited. It must be called at most once.
 func (r *Router) Wait() {
+	r.mu.Lock()
+	r.shuttingDown = true
+	r.mu.Unlock()
+
 	r.wg.Wait()
 }
