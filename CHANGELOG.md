@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **ワーカー起動失敗時のユーザー通知** — `cmd.Start` 失敗・stdin パイプ失敗・JSON エンコード失敗など、ルーター起因のエラー発生時に ephemeral メッセージでユーザーへ通知するよう修正。ACL/輻輳エラーとの UX 一貫性を確保。通知メッセージはルートごとに `error_message` で設定可能（省略時はデフォルト文字列）
 - **ユニットテスト** — `acl_test.go`・`worker_test.go`・`config_test.go` を追加。`ACL.Check` / `ACL.isEmpty` / `validateResponseURL` / `sanitizedEnv` / `validateScript` / `LoadConfig` をカバー。プロダクションコードの変更なし
 
 ### Fixed
