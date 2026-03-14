@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-03-14
+
+### Added
+
+- **ユニットテスト** — `acl_test.go`・`worker_test.go`・`config_test.go` を追加。`ACL.Check` / `ACL.isEmpty` / `validateResponseURL` / `sanitizedEnv` / `validateScript` / `LoadConfig` をカバー。プロダクションコードの変更なし
+
+### Changed
+
+- **`make test` にレースデテクタを追加** — `go test -race ./...` に変更し、並行バグを早期検出
+- **`make lint` に `staticcheck` を追加** — インストール済みの場合のみ実行し、未インストール時はインストール案内を表示
+
 ## [0.1.2] - 2026-03-14
 
 ### Security
@@ -45,7 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ビルド時バージョン埋め込み** — `git describe --tags` の結果を `-ldflags` でバイナリに埋め込み
 - **サンプルスクリプト** — `scripts/hello.sh`（挨拶スクリプト）を同梱
 
-[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/magifd2/slack-router/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/magifd2/slack-router/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/magifd2/slack-router/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/magifd2/slack-router/releases/tag/v0.1.0

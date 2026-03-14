@@ -62,12 +62,13 @@ run: build ## Build and run with config.yaml
 	./$(BINARY) -config config.yaml
 
 .PHONY: test
-test: ## Run tests
-	go test ./...
+test: ## Run tests with race detector
+	go test -race ./...
 
 .PHONY: lint
-lint: ## Run go vet
+lint: ## Run go vet and staticcheck
 	go vet ./...
+	@which staticcheck > /dev/null 2>&1 && staticcheck ./... || echo "staticcheck not installed (go install honnef.co/go/tools/cmd/staticcheck@latest)"
 
 .PHONY: tidy
 tidy: ## Tidy go modules
