@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 // ACL holds per-route access control lists.
 //
@@ -26,16 +29,16 @@ func (e *aclDenied) Error() string { return e.reason }
 // Check returns an *aclDenied error if the request should be rejected,
 // or nil if it is permitted.
 func (a *ACL) Check(userID, channelID string) error {
-	if sliceContains(a.DenyUsers, userID) {
+	if slices.Contains(a.DenyUsers, userID) {
 		return &aclDenied{reason: fmt.Sprintf("user %q is in the deny list", userID)}
 	}
-	if sliceContains(a.DenyChannels, channelID) {
+	if slices.Contains(a.DenyChannels, channelID) {
 		return &aclDenied{reason: fmt.Sprintf("channel %q is in the deny list", channelID)}
 	}
-	if len(a.AllowUsers) > 0 && !sliceContains(a.AllowUsers, userID) {
+	if len(a.AllowUsers) > 0 && !slices.Contains(a.AllowUsers, userID) {
 		return &aclDenied{reason: fmt.Sprintf("user %q is not in the allow list", userID)}
 	}
-	if len(a.AllowChannels) > 0 && !sliceContains(a.AllowChannels, channelID) {
+	if len(a.AllowChannels) > 0 && !slices.Contains(a.AllowChannels, channelID) {
 		return &aclDenied{reason: fmt.Sprintf("channel %q is not in the allow list", channelID)}
 	}
 	return nil
@@ -49,11 +52,3 @@ func (a *ACL) isEmpty() bool {
 		len(a.DenyUsers) == 0
 }
 
-func sliceContains(list []string, s string) bool {
-	for _, v := range list {
-		if v == s {
-			return true
-		}
-	}
-	return false
-}
