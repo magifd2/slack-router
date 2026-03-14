@@ -10,12 +10,15 @@ LDFLAGS := -X main.version=$(VERSION) \
 
 GO_BUILD := go build -trimpath -ldflags "$(LDFLAGS)"
 
+# Files bundled into each release zip alongside the binary.
+# Adjust this list if you add more files worth shipping.
+BUNDLE_FILES := README.md CHANGELOG.md config.example.yaml .env.example docs scripts
+
 PLATFORMS := \
 	darwin/amd64 \
 	darwin/arm64 \
 	linux/amd64  \
-	linux/arm64  \
-	windows/amd64
+	linux/arm64
 
 .DEFAULT_GOAL := help
 
@@ -26,20 +29,26 @@ build: ## Build for the current platform
 	$(GO_BUILD) -o $(BINARY) .
 
 .PHONY: release
-release: ## Cross-compile for all platforms → dist/
+release: ## Cross-compile for all platforms and package into zip archives → dist/
 	@mkdir -p dist
 	@for platform in $(PLATFORMS); do \
 		os=$$(echo $$platform | cut -d/ -f1); \
 		arch=$$(echo $$platform | cut -d/ -f2); \
-		ext=""; [ "$$os" = "windows" ] && ext=".exe"; \
-		out="dist/$(BINARY)-$(VERSION)-$$os-$$arch$$ext"; \
-		printf "  building %-50s" "$$out ..."; \
-		GOOS=$$os GOARCH=$$arch $(GO_BUILD) -o "$$out" . \
-			&& echo "ok" || { echo "FAILED"; exit 1; }; \
+		name="$(BINARY)-$(VERSION)-$$os-$$arch"; \
+		stagedir="dist/$$name"; \
+		zipfile="dist/$$name.zip"; \
+		printf "  %-52s" "$$name ..."; \
+		mkdir -p "$$stagedir"; \
+		GOOS=$$os GOARCH=$$arch $(GO_BUILD) -o "$$stagedir/$(BINARY)" . \
+			|| { echo "FAILED"; rm -rf "$$stagedir"; exit 1; }; \
+		cp -r $(BUNDLE_FILES) "$$stagedir/"; \
+		cd dist && zip -qr "$$name.zip" "$$name/" && cd ..; \
+		rm -rf "$$stagedir"; \
+		echo "ok  →  $$zipfile"; \
 	done
 	@echo ""
-	@echo "Artifacts in dist/:"
-	@ls -lh dist/
+	@echo "Artifacts:"
+	@ls -lh dist/*.zip
 
 .PHONY: clean
 clean: ## Remove build artifacts (binary + dist/)
