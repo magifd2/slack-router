@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-03-14
+
+### Added
+
+- **ハートビートログ** — 定期的に `{"msg":"heartbeat","uptime":"..."}` を出力し、ログ監視システムによるプロセス死活監視を可能にする。間隔は `global.heartbeat_interval`（デフォルト `1m`、`0` で無効）で設定可能。起動ログにも設定値を記録
+
 ## [0.1.3] - 2026-03-14
 
 ### Added
@@ -61,7 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ビルド時バージョン埋め込み** — `git describe --tags` の結果を `-ldflags` でバイナリに埋め込み
 - **サンプルスクリプト** — `scripts/hello.sh`（挨拶スクリプト）を同梱
 
-[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/magifd2/slack-router/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/magifd2/slack-router/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/magifd2/slack-router/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/magifd2/slack-router/compare/v0.1.0...v0.1.1
