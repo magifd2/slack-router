@@ -122,7 +122,7 @@ func TestRunWorkerLogsOutput(t *testing.T) {
 
 	runWorker(context.Background(), script, 5*time.Second, SlashEvent{
 		Command: "/test", UserID: "U001", ChannelID: "C001",
-	})
+	}, "system error")
 
 	if !h.findLog("worker stdout", "output", "hello stdout") {
 		t.Error("expected stdout to be logged under 'worker stdout'")
@@ -147,7 +147,7 @@ func TestRunWorkerNoOutputWhenSilent(t *testing.T) {
 
 	runWorker(context.Background(), script, 5*time.Second, SlashEvent{
 		Command: "/test", UserID: "U001", ChannelID: "C001",
-	})
+	}, "system error")
 
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -155,6 +155,28 @@ func TestRunWorkerNoOutputWhenSilent(t *testing.T) {
 		if r.Message == "worker stdout" || r.Message == "worker stderr" {
 			t.Errorf("expected no output logs for silent script, got message: %q", r.Message)
 		}
+	}
+}
+
+func TestRunWorkerStartFailureNotifiesUser(t *testing.T) {
+	h := &captureHandler{}
+	old := slog.Default()
+	slog.SetDefault(slog.New(h))
+	t.Cleanup(func() { slog.SetDefault(old) })
+
+	// Non-existent script triggers cmd.Start() failure.
+	// ResponseURL is empty so notifyEphemeral will log a validation warning —
+	// that warning is proof the notification path was reached.
+	runWorker(context.Background(), "/nonexistent/script.sh", 5*time.Second, SlashEvent{
+		Command: "/test", UserID: "U001", ChannelID: "C001",
+	}, "system error")
+
+	if !h.findLog("worker: start failed", "command", "/test") {
+		t.Error("expected start failure to be logged")
+	}
+	// notifyEphemeral rejects an empty ResponseURL with a warning — confirms it was called.
+	if !h.findLog("notifyEphemeral: skipping invalid response_url", "err", "empty") {
+		t.Error("expected notification attempt after start failure")
 	}
 }
 

@@ -43,6 +43,8 @@ type RouteConfig struct {
 	BusyMessage string `yaml:"busy_message"`
 	// DenyMessage is shown when an ACL rule rejects the request.
 	DenyMessage string `yaml:"deny_message"`
+	// ErrorMessage is shown when the router fails to start the worker process.
+	ErrorMessage string `yaml:"error_message"`
 
 	// ACL fields are inlined so they appear at the same level in YAML.
 	ACL `yaml:",inline"`
@@ -148,6 +150,9 @@ func (c *Config) validate(configDir string) error {
 		}
 		if r.DenyMessage == "" {
 			r.DenyMessage = ":no_entry: このコマンドを実行する権限がありません。"
+		}
+		if r.ErrorMessage == "" {
+			r.ErrorMessage = ":x: コマンドの実行を開始できませんでした。しばらく待ってから再度お試しください。"
 		}
 	}
 

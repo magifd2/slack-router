@@ -133,7 +133,7 @@ func (r *Router) Dispatch(ctx context.Context, event SlashEvent) error {
 		if sem, hasSem := r.routeSems[event.Command]; hasSem {
 			defer func() { <-sem }()
 		}
-		runWorker(ctx, route.Script, route.Timeout, event)
+		runWorker(ctx, route.Script, route.Timeout, event, route.ErrorMessage)
 	}()
 
 	return nil

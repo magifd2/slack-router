@@ -33,7 +33,7 @@ var notifyHTTPClient = &http.Client{Timeout: 5 * time.Second}
 //
 // On timeout the worker receives SIGTERM; if it does not exit within
 // gracePeriod it receives SIGKILL.
-func runWorker(ctx context.Context, script string, timeout time.Duration, event SlashEvent) {
+func runWorker(ctx context.Context, script string, timeout time.Duration, event SlashEvent, errorMessage string) {
 	workerCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
@@ -55,12 +55,14 @@ func runWorker(ctx context.Context, script string, timeout time.Duration, event 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		slog.Error("worker: stdin pipe failed", "command", event.Command, "script", script, "err", err)
+		notifyEphemeral(event.ResponseURL, errorMessage)
 		return
 	}
 
 	if err := cmd.Start(); err != nil {
 		stdin.Close() // prevent pipe fd leak when Start fails
 		slog.Error("worker: start failed", "command", event.Command, "script", script, "err", err)
+		notifyEphemeral(event.ResponseURL, errorMessage)
 		return
 	}
 
@@ -69,12 +71,13 @@ func runWorker(ctx context.Context, script string, timeout time.Duration, event 
 
 	// Write JSON payload to stdin then close.
 	// If encoding fails the worker would run without its input data, so we
-	// kill it immediately to avoid silent misbehaviour.
+	// notify the user and kill it immediately to avoid silent misbehaviour.
 	go func() {
 		defer stdin.Close()
 		enc := json.NewEncoder(stdin)
 		if err := enc.Encode(event); err != nil {
 			slog.Warn("worker: stdin write error, killing process", "pid", pid, "err", err)
+			notifyEphemeral(event.ResponseURL, errorMessage)
 			cmd.Process.Kill() //nolint:errcheck
 		}
 	}()

@@ -176,6 +176,9 @@ routes:
 		if cfg.Routes[0].DenyMessage == "" {
 			t.Error("DenyMessage default should be non-empty")
 		}
+		if cfg.Routes[0].ErrorMessage == "" {
+			t.Error("ErrorMessage default should be non-empty")
+		}
 	})
 
 	t.Run("duplicate command rejected", func(t *testing.T) {
