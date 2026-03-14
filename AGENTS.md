@@ -112,6 +112,44 @@ Do not hard-code version strings in Go source.
 
 ---
 
+## Change Management
+
+### Keep changes small
+- Make one logical change per commit. Avoid bundling unrelated edits.
+- If a change touches multiple files, verify each file is necessary for the single goal.
+
+### Ensure rollback points before large changes
+- Before starting any non-trivial change (refactor, new feature, dependency upgrade),
+  ensure the working tree is clean and the current state is committed or tagged.
+- If the work is exploratory and may be discarded, create a throwaway branch rather
+  than committing directly to `main`.
+- Use `make tag VERSION=vX.Y.Z` to mark a stable state before a risky change.
+
+### Keep AGENTS.md in sync with the code
+- When code structure changes (new file added, responsibility moved, new pattern
+  established), update the relevant section of this file in the same commit.
+- When a new security constraint or concurrency rule is introduced, add it to the
+  appropriate section here. Rules that exist only in code comments will be missed.
+
+---
+
+## Adding New Features
+
+### Design for testability first
+- Before implementing, identify which functions can be tested in isolation.
+  Prefer pure functions and small, focused methods over large procedures.
+- If a new function relies on external state (filesystem, env vars, network),
+  keep that boundary thin so the core logic can be tested without it.
+
+### Tests are required alongside implementation
+- Every new exported or package-level function must have a corresponding test
+  in the matching `*_test.go` file.
+- Write tests in the same commit as the implementation — do not defer testing
+  to a follow-up commit.
+- New test cases must follow the table-driven style established in existing test files.
+
+---
+
 ## Git and Changelog Rules
 
 - **Conventional commit prefixes**: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `security:`
