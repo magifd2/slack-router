@@ -1,4 +1,4 @@
-module github.com/magi/slack-event-handler
+module github.com/magifd2/slack-router
 
 go 1.22
 
