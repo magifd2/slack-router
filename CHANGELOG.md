@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-03-14
+
+### Fixed
+
+- **グレースフルシャットダウン中の新規リクエスト受付競合** — `wg.Add` と `wg.Wait` の間に存在した race condition を mutex で解消。シャットダウン開始後に到着したリクエストが WaitGroup に追加されワーカーが孤立する問題を修正
+- **シャットダウン時の ephemeral 通知ロスト** — `notifyEphemeral` の goroutine が WaitGroup 管理外だったため、HTTP POST 完了前にプロセスが終了してユーザーへの通知が届かない場合があった。専用の `notifyWg` で追跡しシャットダウン完了まで待機するよう修正
+
+### Changed
+
+- **`sliceContains` を `slices.Contains` に置換** — Go 1.21 標準ライブラリの `slices` パッケージを使用し、自前実装を削除
+
 ## [0.1.0] - 2026-03-14
 
 ### Added
@@ -28,5 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ビルド時バージョン埋め込み** — `git describe --tags` の結果を `-ldflags` でバイナリに埋め込み
 - **サンプルスクリプト** — `scripts/hello.sh`（挨拶スクリプト）を同梱
 
-[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/magifd2/slack-router/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/magifd2/slack-router/releases/tag/v0.1.0
