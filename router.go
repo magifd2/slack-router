@@ -29,6 +29,11 @@ type Router struct {
 	mu           sync.Mutex
 	shuttingDown bool
 	wg           sync.WaitGroup
+
+	// notifyWg tracks fire-and-forget notification goroutines (e.g. ephemeral
+	// Slack messages). Unlike wg, it is not subject to shuttingDown — we want
+	// in-flight notifications to complete even during shutdown.
+	notifyWg sync.WaitGroup
 }
 
 // NewRouter creates a Router from the given configuration.
@@ -134,12 +139,25 @@ func (r *Router) Dispatch(ctx context.Context, event SlashEvent) error {
 	return nil
 }
 
+// GoNotify runs fn in a tracked goroutine. Use this for fire-and-forget
+// notifications (e.g. notifyEphemeral) so they are guaranteed to complete
+// before the process exits, even when called close to shutdown time.
+func (r *Router) GoNotify(fn func()) {
+	r.notifyWg.Add(1)
+	go func() {
+		defer r.notifyWg.Done()
+		fn()
+	}()
+}
+
 // Wait signals that no new workers should be accepted, then blocks until all
-// running workers have exited. It must be called at most once.
+// running workers and in-flight notifications have exited. It must be called
+// at most once.
 func (r *Router) Wait() {
 	r.mu.Lock()
 	r.shuttingDown = true
 	r.mu.Unlock()
 
 	r.wg.Wait()
+	r.notifyWg.Wait()
 }

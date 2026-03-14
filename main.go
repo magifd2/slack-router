@@ -123,7 +123,9 @@ func handleEvent(ctx context.Context, client *socketmode.Client, router *Router,
 			var de *DispatchError
 			if errors.As(err, &de) {
 				slog.Warn("request dropped", "command", cmd.Command, "user", cmd.UserID, "reason", de.Reason)
-				go notifyEphemeral(cmd.ResponseURL, de.Message)
+				responseURL := cmd.ResponseURL
+				message := de.Message
+				router.GoNotify(func() { notifyEphemeral(responseURL, message) })
 			}
 		}
 
