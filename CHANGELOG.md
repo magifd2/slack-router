@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-03-14
+
+### Security
+
+- **ワーカープロセスへの Slack トークン漏洩を防止** — `exec.Command` はデフォルトで親プロセスの環境変数を引き継ぐため、`SLACK_APP_TOKEN` / `SLACK_BOT_TOKEN` がワーカースクリプトに渡ってしまっていた。`cmd.Env` を明示的に設定し、機密の環境変数をブロックリストで除去するよう修正。`PATH` や `HOME` など汎用的な変数は引き続きワーカーに渡される
+
 ## [0.1.1] - 2026-03-14
 
 ### Fixed
@@ -39,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ビルド時バージョン埋め込み** — `git describe --tags` の結果を `-ldflags` でバイナリに埋め込み
 - **サンプルスクリプト** — `scripts/hello.sh`（挨拶スクリプト）を同梱
 
-[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/magifd2/slack-router/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/magifd2/slack-router/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/magifd2/slack-router/releases/tag/v0.1.0
