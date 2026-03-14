@@ -1,0 +1,102 @@
+# =============================================================================
+# Go
+# =============================================================================
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build output (project binary and release artifacts)
+slack-router
+dist/
+
+# Test binary and coverage
+*.test
+*.out
+coverage.html
+coverage.txt
+
+# Go workspace
+go.work
+go.work.sum
+
+# =============================================================================
+# Secrets / Configuration
+# =============================================================================
+
+# Local config (contains Slack tokens — never commit)
+config.yaml
+
+# Generic secret patterns
+*.env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# =============================================================================
+# Scripts (local worker scripts may contain sensitive logic)
+# =============================================================================
+
+# Uncomment if you keep worker scripts outside the repo
+# scripts/
+
+# =============================================================================
+# OS
+# =============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =============================================================================
+# Editor / IDE
+# =============================================================================
+
+# JetBrains (GoLand, etc.)
+.idea/
+*.iml
+*.iws
+
+# VSCode
+.vscode/
+!.vscode/extensions.json
+
+# Vim / Neovim
+*.swp
+*.swo
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+Session.vim
+.netrwhist
+
+# Emacs
+\#*\#
+.\#*
+
+# =============================================================================
+# Logs & Runtime
+# =============================================================================
+
+*.log
+logs/
+pids/
+*.pid

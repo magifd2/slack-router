@@ -1,0 +1,61 @@
+# config.yaml — Slack Slash Command Router 設定例
+# 実際に使う場合は config.yaml にコピーして編集してください
+
+slack:
+  # トークンは環境変数 SLACK_APP_TOKEN / SLACK_BOT_TOKEN で渡すことを推奨。
+  # 環境変数が設定されている場合はそちらが優先されるため、
+  # このファイルをリポジトリにコミットしても安全になります。
+  #
+  # 開発・テスト目的で直接書く場合:
+  #   app_token: "xapp-1-..."
+  #   bot_token:  "xoxb-..."
+  app_token: ""  # または環境変数 SLACK_APP_TOKEN
+  bot_token:  ""  # または環境変数 SLACK_BOT_TOKEN
+
+global:
+  max_concurrent_workers: 10  # ルーター全体の同時実行上限
+  log_level: "info"           # debug / info / warn / error
+  messages:
+    # グローバル同時実行数の上限に達したときにユーザーへ送るメッセージ
+    # 省略するとデフォルト文字列が使われます
+    server_busy: ":warning: サーバーが混み合っています。しばらく待ってから再度お試しください。"
+
+routes:
+  # 挨拶サンプル（scripts/hello.sh）
+  # /hello          → "こんにちは、@you さん！"
+  # /hello おはよう → "おはよう、@you さん！"
+  - command: "/hello"
+    script: "./scripts/hello.sh"
+    timeout: "10s"
+    max_concurrency: 5
+    # busy_message / deny_message を省略するとデフォルト文字列が使われます
+
+  # LLM への質問を処理する例
+  - command: "/ask"
+    script: "./scripts/ask_llm.sh"
+    timeout: "5m"
+    max_concurrency: 3  # 同時に最大 3 つまで並走
+
+  # デプロイ処理（排他実行 + ACL で ops チャンネル・管理者ユーザーに限定）
+  - command: "/deploy"
+    script: "./scripts/deploy.sh"
+    timeout: "30m"
+    max_concurrency: 1
+    # ACL 設定（すべて省略可。省略したリストは制限なし）
+    allow_channels:
+      - "C000000001"  # #ops チャンネルのみ許可
+    allow_users:
+      - "U000000001"  # @alice
+      - "U000000002"  # @bob
+    deny_users:
+      - "U000000099"  # 一時的に制限したいユーザー
+    busy_message: ":warning: デプロイは同時に1件しか実行できません。完了後に再度お試しください。"
+    deny_message: ":no_entry: デプロイの実行権限がありません。#ops チャンネルで申請してください。"
+
+  # タイムアウトを長めに取るバッチ処理（特定チャンネルから実行禁止）
+  - command: "/report"
+    script: "./scripts/generate_report.sh"
+    timeout: "60m"
+    max_concurrency: 2
+    deny_channels:
+      - "C000000099"  # #general など公開チャンネルからは拒否
