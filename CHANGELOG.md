@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-03-14
+
 ### Added
 
 - **ワーカー起動失敗時のユーザー通知** — `cmd.Start` 失敗・stdin パイプ失敗・JSON エンコード失敗など、ルーター起因のエラー発生時に ephemeral メッセージでユーザーへ通知するよう修正。ACL/輻輳エラーとの UX 一貫性を確保。通知メッセージはルートごとに `error_message` で設定可能（省略時はデフォルト文字列）
@@ -59,7 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ビルド時バージョン埋め込み** — `git describe --tags` の結果を `-ldflags` でバイナリに埋め込み
 - **サンプルスクリプト** — `scripts/hello.sh`（挨拶スクリプト）を同梱
 
-[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/magifd2/slack-router/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/magifd2/slack-router/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/magifd2/slack-router/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/magifd2/slack-router/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/magifd2/slack-router/releases/tag/v0.1.0
