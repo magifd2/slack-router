@@ -111,9 +111,10 @@ func handleEvent(ctx context.Context, client *socketmode.Client, router *Router,
 			ResponseURL: cmd.ResponseURL,
 		}
 
+		// cmd.Text is intentionally omitted from the log to avoid
+		// recording potentially sensitive user input (passwords, tokens, etc.).
 		slog.Info("slash command received",
 			"command", cmd.Command,
-			"text", cmd.Text,
 			"user", cmd.UserID,
 			"channel", cmd.ChannelID,
 		)

@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os/exec"
 	"syscall"
 	"time"
@@ -19,6 +21,10 @@ type SlashEvent struct {
 	ChannelID   string `json:"channel_id"`
 	ResponseURL string `json:"response_url"`
 }
+
+// notifyHTTPClient is shared across notifyEphemeral calls.
+// The 5-second timeout prevents goroutine hangs on slow or unresponsive endpoints.
+var notifyHTTPClient = &http.Client{Timeout: 5 * time.Second}
 
 // runWorker starts script as a child process, writes event as JSON to its
 // stdin, then waits for it to exit.
@@ -41,6 +47,7 @@ func runWorker(ctx context.Context, script string, timeout time.Duration, event 
 	}
 
 	if err := cmd.Start(); err != nil {
+		stdin.Close() // prevent pipe fd leak when Start fails
 		slog.Error("worker: start failed", "command", event.Command, "script", script, "err", err)
 		return
 	}
@@ -48,14 +55,16 @@ func runWorker(ctx context.Context, script string, timeout time.Duration, event 
 	pid := cmd.Process.Pid
 	slog.Info("worker started", "pid", pid, "command", event.Command, "script", script, "user", event.UserID)
 
-	// Write JSON payload to stdin then close, in a separate goroutine so it
-	// does not block if the child is not reading.
+	// Write JSON payload to stdin then close.
+	// If encoding fails the worker would run without its input data, so we
+	// kill it immediately to avoid silent misbehaviour.
 	go func() {
+		defer stdin.Close()
 		enc := json.NewEncoder(stdin)
 		if err := enc.Encode(event); err != nil {
-			slog.Warn("worker: stdin write error", "pid", pid, "err", err)
+			slog.Warn("worker: stdin write error, killing process", "pid", pid, "err", err)
+			cmd.Process.Kill() //nolint:errcheck
 		}
-		stdin.Close()
 	}()
 
 	// Collect the process exit asynchronously.
@@ -99,15 +108,31 @@ type slackResponse struct {
 
 // notifyEphemeral posts a message visible only to the requesting user.
 // response_type "ephemeral" ensures the message is not shown to the channel.
+//
+// The function validates responseURL against Slack's known webhook domain to
+// prevent SSRF. A 5-second HTTP timeout is enforced via notifyHTTPClient.
 func notifyEphemeral(responseURL, message string) {
-	if responseURL == "" {
+	if err := validateResponseURL(responseURL); err != nil {
+		slog.Warn("notifyEphemeral: skipping invalid response_url", "err", err)
 		return
 	}
+
 	body, _ := json.Marshal(slackResponse{
 		ResponseType: "ephemeral",
 		Text:         message,
 	})
-	resp, err := http.Post(responseURL, "application/json", bytes.NewReader(body)) //nolint:noctx
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, responseURL, bytes.NewReader(body))
+	if err != nil {
+		slog.Warn("notifyEphemeral: failed to build request", "err", err)
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := notifyHTTPClient.Do(req)
 	if err != nil {
 		slog.Warn("notifyEphemeral: http post failed", "err", err)
 		return
@@ -115,3 +140,21 @@ func notifyEphemeral(responseURL, message string) {
 	resp.Body.Close()
 }
 
+// validateResponseURL ensures the URL is an HTTPS endpoint on hooks.slack.com,
+// preventing SSRF attacks via a manipulated response_url.
+func validateResponseURL(rawURL string) error {
+	if rawURL == "" {
+		return fmt.Errorf("response_url is empty")
+	}
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("response_url parse error: %w", err)
+	}
+	if u.Scheme != "https" {
+		return fmt.Errorf("response_url must use https, got %q", u.Scheme)
+	}
+	if u.Host != "hooks.slack.com" {
+		return fmt.Errorf("response_url host must be hooks.slack.com, got %q", u.Host)
+	}
+	return nil
+}
