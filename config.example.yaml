@@ -21,7 +21,7 @@ global:
     server_busy: ":warning: サーバーが混み合っています。しばらく待ってから再度お試しください。"
 
 routes:
-  # 挨拶サンプル（scripts/hello.sh）
+  # 挨拶サンプル（scripts/hello.sh）— このファイルはリポジトリに同梱されています
   # /hello          → "こんにちは、@you さん！"
   # /hello おはよう → "おはよう、@you さん！"
   - command: "/hello"
@@ -30,32 +30,36 @@ routes:
     max_concurrency: 5
     # busy_message / deny_message を省略するとデフォルト文字列が使われます
 
+  # 以下はルート設定のサンプルです。
+  # script に指定するファイルは実際に存在し、実行権限が必要です（起動時に検証されます）。
+  # 必要なスクリプトを用意してからコメントを外してください。
+
   # LLM への質問を処理する例
-  - command: "/ask"
-    script: "./scripts/ask_llm.sh"
-    timeout: "5m"
-    max_concurrency: 3  # 同時に最大 3 つまで並走
+  # - command: "/ask"
+  #   script: "./scripts/ask_llm.sh"
+  #   timeout: "5m"
+  #   max_concurrency: 3  # 同時に最大 3 つまで並走
 
   # デプロイ処理（排他実行 + ACL で ops チャンネル・管理者ユーザーに限定）
-  - command: "/deploy"
-    script: "./scripts/deploy.sh"
-    timeout: "30m"
-    max_concurrency: 1
-    # ACL 設定（すべて省略可。省略したリストは制限なし）
-    allow_channels:
-      - "C000000001"  # #ops チャンネルのみ許可
-    allow_users:
-      - "U000000001"  # @alice
-      - "U000000002"  # @bob
-    deny_users:
-      - "U000000099"  # 一時的に制限したいユーザー
-    busy_message: ":warning: デプロイは同時に1件しか実行できません。完了後に再度お試しください。"
-    deny_message: ":no_entry: デプロイの実行権限がありません。#ops チャンネルで申請してください。"
+  # - command: "/deploy"
+  #   script: "./scripts/deploy.sh"
+  #   timeout: "30m"
+  #   max_concurrency: 1
+  #   # ACL 設定（すべて省略可。省略したリストは制限なし）
+  #   allow_channels:
+  #     - "C000000001"  # #ops チャンネルのみ許可
+  #   allow_users:
+  #     - "U000000001"  # @alice
+  #     - "U000000002"  # @bob
+  #   deny_users:
+  #     - "U000000099"  # 一時的に制限したいユーザー
+  #   busy_message: ":warning: デプロイは同時に1件しか実行できません。完了後に再度お試しください。"
+  #   deny_message: ":no_entry: デプロイの実行権限がありません。#ops チャンネルで申請してください。"
 
   # タイムアウトを長めに取るバッチ処理（特定チャンネルから実行禁止）
-  - command: "/report"
-    script: "./scripts/generate_report.sh"
-    timeout: "60m"
-    max_concurrency: 2
-    deny_channels:
-      - "C000000099"  # #general など公開チャンネルからは拒否
+  # - command: "/report"
+  #   script: "./scripts/generate_report.sh"
+  #   timeout: "60m"
+  #   max_concurrency: 2
+  #   deny_channels:
+  #     - "C000000099"  # #general など公開チャンネルからは拒否
