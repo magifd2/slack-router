@@ -8,7 +8,9 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -39,6 +41,9 @@ func runWorker(ctx context.Context, script string, timeout time.Duration, event 
 	// Place the child in its own process group so SIGTERM/SIGKILL hits
 	// the whole subtree.
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	// Strip sensitive router credentials from the child's environment.
+	// Workers receive all other env vars (PATH, HOME, …) unchanged.
+	cmd.Env = sanitizedEnv()
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -138,6 +143,28 @@ func notifyEphemeral(responseURL, message string) {
 		return
 	}
 	resp.Body.Close()
+}
+
+// sensitiveEnvKeys lists environment variables that must not be passed to
+// worker scripts. These are credentials held by the router process itself.
+var sensitiveEnvKeys = map[string]struct{}{
+	"SLACK_APP_TOKEN": {},
+	"SLACK_BOT_TOKEN": {},
+}
+
+// sanitizedEnv returns a copy of the current process environment with
+// sensitive credentials removed. Workers inherit PATH, HOME, and all other
+// general-purpose variables, but never the router's Slack tokens.
+func sanitizedEnv() []string {
+	src := os.Environ()
+	out := make([]string, 0, len(src))
+	for _, kv := range src {
+		key, _, _ := strings.Cut(kv, "=")
+		if _, blocked := sensitiveEnvKeys[key]; !blocked {
+			out = append(out, kv)
+		}
+	}
+	return out
 }
 
 // validateResponseURL ensures the URL is an HTTPS endpoint on hooks.slack.com,
