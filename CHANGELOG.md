@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **ワーカーの stdout/stderr がサイレント破棄される問題** — `cmd.Stdout`/`cmd.Stderr` を未設定のままにしていたため、デーモン実行時にワーカーの全出力が /dev/null 相当に捨てられていた。`bytes.Buffer` で捕捉し、stdout を INFO・stderr を WARN レベルで構造化ログに出力するよう修正
+
 ## [0.1.3] - 2026-03-14
 
 ### Added
