@@ -50,6 +50,10 @@ release: ## Cross-compile for all platforms and package into zip archives → di
 	@echo "Artifacts:"
 	@ls -lh dist/*.zip
 
+.PHONY: package
+## package: Alias for release — build all platforms and create .zip archives
+package: release
+
 .PHONY: clean
 clean: ## Remove build artifacts (binary + dist/)
 	rm -f $(BINARY)

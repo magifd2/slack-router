@@ -1,4 +1,4 @@
-module github.com/magifd2/slack-router
+module github.com/nlink-jp/slack-router
 
 go 1.22
 
