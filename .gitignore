@@ -9,8 +9,7 @@
 *.so
 *.dylib
 
-# Build output (project binary and release artifacts)
-slack-router
+# Build output (release artifacts)
 dist/
 
 # Test binary and coverage

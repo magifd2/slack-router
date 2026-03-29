@@ -26,7 +26,8 @@ PLATFORMS := \
 
 .PHONY: build
 build: ## Build for the current platform
-	$(GO_BUILD) -o $(BINARY) .
+	@mkdir -p dist
+	$(GO_BUILD) -o dist/$(BINARY) .
 
 .PHONY: release
 release: ## Cross-compile for all platforms and package into zip archives → dist/
@@ -55,15 +56,14 @@ release: ## Cross-compile for all platforms and package into zip archives → di
 package: release
 
 .PHONY: clean
-clean: ## Remove build artifacts (binary + dist/)
-	rm -f $(BINARY)
+clean: ## Remove build artifacts
 	rm -rf dist/
 
 # ─── development ────────────────────────────────────────────────────────────
 
 .PHONY: run
 run: build ## Build and run with config.yaml
-	./$(BINARY) -config config.yaml
+	./dist/$(BINARY) -config config.yaml
 
 .PHONY: test
 test: ## Run tests with race detector
