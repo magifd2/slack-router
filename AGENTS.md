@@ -16,7 +16,7 @@ binary with no inbound port. All config lives in `config.yaml`.
 ## Language and Toolchain
 
 - **Go 1.22** — do not use language features beyond Go 1.22
-- **`go.mod` module**: `github.com/magifd2/slack-router`
+- **`go.mod` module**: `github.com/nlink-jp/slack-router`
 - All files are `package main` — there are no sub-packages
 - Use `slices.Contains` (stdlib since Go 1.21); do not write custom slice helpers
 - Use `log/slog` for all logging — no `fmt.Println`, no `log.Printf`
